@@ -42,8 +42,11 @@ start_coupled <- function(path_remind, path_magpie, cfg_rem, cfg_mag, runname, m
   cfg_mag <- check_config(cfg_mag, file.path(path_magpie, "config", "default.cfg"), file.path(path_magpie,"modules"))
   cfg_mag$sequential <- TRUE
   cfg_mag$force_replace <- TRUE
-  # if provided use ghg prices for land (MAgPIE) from a different REMIND run than the one MAgPIE runs coupled to
+  # if provided, use ghg prices for land (MAgPIE) from a different REMIND run than the one MAgPIE runs are coupled to
   use_external_ghgprices <- ifelse(is.na(cfg_mag$path_to_report_ghgprices), FALSE, TRUE)
+  # if provided (and the MAgPIE version supports biochar), use biochar production from a different REMIND run than the one MAgPIE runs are coupled to
+  supports_biochar <- "path_to_report_biochar" %in% names(cfg_mag)
+  use_external_biochar <- supports_biochar && ifelse(is.na(cfg_mag$path_to_report_biochar), FALSE, TRUE)
 
   if (start_iter > max_iterations) stop("### COUPLING ### start_iter > max_iterations")
 
@@ -195,6 +198,8 @@ start_coupled <- function(path_remind, path_magpie, cfg_rem, cfg_mag, runname, m
     cfg_mag$path_to_report_bioenergy <- report
     # if no different mif was set for GHG prices use the same as for bioenergy
     if(! use_external_ghgprices) cfg_mag$path_to_report_ghgprices <- report
+    # if no different mif was set for biochar production (and MAgPIE version supports biochar), use the same as for bioenergy
+    if(supports_biochar && ! use_external_biochar) cfg_mag$path_to_report_biochar <- report
     ########### START MAGPIE #############
     outfolder_mag <- start_run(cfg_mag, codeCheck=FALSE)
     ######################################
